@@ -169,7 +169,22 @@ public class ADBDevice {
     }
     Debug timer = Debug.startTimer();
     try {
-      InputStream stdout = device.executeShell("screencap");
+      InputStream stdout = device.executeShell("content query --uri content://settings/system --bind name:s:user_rotation");
+      ByteArrayOutputStream result = new ByteArrayOutputStream();
+      byte[] buffer = new byte[1024];
+      int length;
+      while ((length = inputStream.read(buffer)) != -1) {
+          result.write(buffer, 0, length);
+      }
+      result.write("\n");
+      stdout = device.executeShell("content query --uri content://settings/system/accelerometer_rotation");
+      while ((length = inputStream.read(buffer)) != -1) {
+          result.write(buffer, 0, length);
+      }      
+      // StandardCharsets.UTF_8.name() > JDK 7
+      log(lvl, result.toString("UTF-8") );    
+
+      stdout = device.executeShell("screencap");
       stdout.read(imagePrefix);
       if (imagePrefix[8] != 0x01) {
         log(-1, "captureDeviceScreenMat: image type not RGBA");
