@@ -190,7 +190,7 @@ public class ADBDevice {
 
       shellCmd = "screencap";
       log(lvl, shellCmd);          
-      stdout = device.executeShell();
+      stdout = device.executeShell(shellCmd);
       stdout.read(imagePrefix);
       if (imagePrefix[8] != 0x01) {
         log(-1, "captureDeviceScreenMat: image type not RGBA");
