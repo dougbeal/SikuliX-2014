@@ -17,13 +17,13 @@ import se.vidstige.jadb.JadbException;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -169,16 +169,16 @@ public class ADBDevice {
     }
     Debug timer = Debug.startTimer();
     try {
-      InputStream stdout = device.executeShell("content query --uri content://settings/system --bind name:s:user_rotation");
+      InputStream stdout = device.executeShell("content query --uri content://settings/system --projection name:value --where \"name='user_rotation'\"");
       ByteArrayOutputStream result = new ByteArrayOutputStream();
       byte[] buffer = new byte[1024];
       int length;
-      while ((length = inputStream.read(buffer)) != -1) {
+      while ((length = stdout.read(buffer)) != -1) {
           result.write(buffer, 0, length);
       }
-      result.write("\n");
+      //result.write("\n");
       stdout = device.executeShell("content query --uri content://settings/system/accelerometer_rotation");
-      while ((length = inputStream.read(buffer)) != -1) {
+      while ((length = stdout.read(buffer)) != -1) {
           result.write(buffer, 0, length);
       }      
       // StandardCharsets.UTF_8.name() > JDK 7
