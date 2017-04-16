@@ -19,6 +19,9 @@ public class ADBScreen extends Region implements EventObserver, IScreen {
 
   static {
     RunTime.loadLibrary("VisionProxy");
+    RunTime.loadLibrary("libopencv_core248");
+    RunTime.loadLibrary("libopencv_java248");
+
   }
 
   private static String me = "ADBScreen: ";
