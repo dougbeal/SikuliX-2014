@@ -169,7 +169,7 @@ public class ADBDevice {
     }
     Debug timer = Debug.startTimer();
     try {
-      String shellCmd = "content query --uri content://settings/system --projection name:value --where \"name='user_rotation'\"";
+      String shellCmd = "settings get system user_rotation";
       log(lvl, shellCmd);        
       InputStream stdout = device.executeShell(shellCmd);
       ByteArrayOutputStream result = new ByteArrayOutputStream();
@@ -179,7 +179,7 @@ public class ADBDevice {
           result.write(buffer, 0, length);
       }
       //result.write("\n");
-      shellCmd = "content query --uri content://settings/system/accelerometer_rotation";
+      shellCmd = "settings get system accelerometer_rotation";
       log(lvl, shellCmd);
       stdout = device.executeShell(shellCmd);
       while ((length = stdout.read(buffer)) != -1) {
@@ -196,8 +196,10 @@ public class ADBDevice {
         log(-1, "captureDeviceScreenMat: image type not RGBA");
         return null;
       }
-      if (byte2int(imagePrefix, 0, 4) != devW || byte2int(imagePrefix, 4, 4) != devH) {
-        log(-1, "captureDeviceScreenMat: width or height differ from device values");
+      imageWidth = byte2int(imagePrefix, 0, 4);
+      imageHeight = byte2int(imagePrefix, 4, 4);
+      if ( imageWidth != devW || imageHeight != devH) {
+          log(-1, "captureDeviceScreenMat: width or height [%d, %d] differ from device values [%d, %d]", imageWidth, imageHeight, devW, devH);
         return null;
       }
       image = new byte[actW * actH * 4];
