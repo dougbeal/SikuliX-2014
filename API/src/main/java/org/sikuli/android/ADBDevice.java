@@ -201,7 +201,7 @@ public class ADBDevice {
       int imageHeight = byte2int(imagePrefix, 4, 4);
       if ( imageWidth != devW || imageHeight != devH) {
           log(1, "Image rotated vs device");
-          lenRow = imageH * 4;
+          lenRow = imageHeight * 4;
       }
       else if ( imageWidth != devW || imageHeight != devH) {
           log(-1, "captureDeviceScreenMat: width or height [%d, %d] differ from device values [%d, %d]", imageWidth, imageHeight, devW, devH);
