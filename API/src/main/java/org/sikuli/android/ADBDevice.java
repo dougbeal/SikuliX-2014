@@ -196,18 +196,19 @@ public class ADBDevice {
         log(-1, "captureDeviceScreenMat: image type not RGBA");
         return null;
       }
-
+      int lenRow = devW * 4;
       int imageWidth = byte2int(imagePrefix, 0, 4);
       int imageHeight = byte2int(imagePrefix, 4, 4);
       if ( imageWidth != devW || imageHeight != devH) {
           log(1, "Image rotated vs device");
+          lenRow = imageH * 4;
       }
       else if ( imageWidth != devW || imageHeight != devH) {
           log(-1, "captureDeviceScreenMat: width or height [%d, %d] differ from device values [%d, %d]", imageWidth, imageHeight, devW, devH);
         return null;
       }
       image = new byte[actW * actH * 4];
-      int lenRow = devW * 4;
+
       byte[] row = new byte[lenRow];
       for (int count = 0; count < y; count++) {
         stdout.read(row);
