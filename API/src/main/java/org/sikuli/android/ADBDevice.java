@@ -6,6 +6,7 @@ package org.sikuli.android;
 
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.Core;
 import org.opencv.imgproc.Imgproc;
 import org.sikuli.basics.Debug;
 import org.sikuli.basics.FileManager;
@@ -198,6 +199,7 @@ public class ADBDevice {
       }
       int actX = x;
       int actY = y;
+      boolean rotated = false;
 
       int imageWidth = byte2int(imagePrefix, 0, 4);
       int imageHeight = byte2int(imagePrefix, 4, 4);
@@ -207,26 +209,34 @@ public class ADBDevice {
           devH = imageHeight;
           actX = y;
           actY = x;
+          rotated = true;
       }
       else if ( imageWidth != devW || imageHeight != devH) {
           log(-1, "captureDeviceScreenMat: width or height [%d, %d] differ from device values [%d, %d]", imageWidth, imageHeight, devW, devH);
         return null;
       }
 
-      int lenRow = devW * 4;      
-      image = new byte[actW * actH * 4];
+      int lenRow = imageWidth * 4;      
+      image = new byte[imageWidth * imageHeight * 4];
 
       byte[] row = new byte[lenRow];
-      for (int count = 0; count < y; count++) {
+      int imageY = y;
+      int imageX = x;
+      if( rotated ) {
+          imageY = x;
+          imageX = y;
+      }
+      for (int count = 0; count < readUntil; count++) {
         stdout.read(row);
       }
-      boolean shortRow = x + actW < devW;
-      for (int count = 0; count < actH; count++) {
+
+      boolean shortRow = imageX + imageWidth < devW;
+      for (int count = 0; count < imageHeight; count++) {
         if (shortRow) {
           stdout.read(row);
           System.arraycopy(row, x * 4, image, count * actW * 4, actW * 4);
         } else {
-          stdout.read(image, count * actW * 4, actW * 4);
+          stdout.read(image, count * imageWidth * 4, imageWidth * 4);
         }
       }
       long duration = timer.end();
@@ -234,9 +244,11 @@ public class ADBDevice {
     } catch (IOException | JadbException e) {
       log(-1, "captureDeviceScreenMat: [%d,%d %dx%d] %s", x, y, actW, actH, e);
     }
-    Mat matOrg = new Mat(actH, actW, CvType.CV_8UC4);
+    Mat matOrg = new Mat(imageHeight, imageWidth, CvType.CV_8UC4);
     matOrg.put(0, 0, image);
     Mat matImage = new Mat();
+    
+    Core.flip(Imgproc.t(), matImage, 1) if rotated;
     Imgproc.cvtColor(matOrg, matImage, Imgproc.COLOR_RGBA2BGR, 3);
     return matImage;
   }
