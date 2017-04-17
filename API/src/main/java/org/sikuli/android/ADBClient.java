@@ -52,6 +52,9 @@ public class ADBClient {
         devices = jadb.getDevices();
       } catch (Exception e) {
       }
+      for( JadbDevice device: devices ) {
+          Debug.log(3, "device: %s", device);
+      }
       if (devices != null && devices.size() > 0) {
         device = devices.get(0);
         serial = device.getSerial();
