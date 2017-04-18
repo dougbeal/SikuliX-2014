@@ -160,6 +160,10 @@ public class ADBDevice {
   public Mat captureDeviceScreenMat(int x, int y, int w, int h) {
     byte[] imagePrefix = new byte[12];
     byte[] image = new byte[0];
+    int imageWidth = 0;
+    int imageHeight = 0;
+    
+    boolean rotated = false;
     int actW = w;
     if (x + w > devW) {
       actW = devW - x;
@@ -199,10 +203,9 @@ public class ADBDevice {
       }
       int actX = x;
       int actY = y;
-      boolean rotated = false;
 
-      int imageWidth = byte2int(imagePrefix, 0, 4);
-      int imageHeight = byte2int(imagePrefix, 4, 4);
+      imageWidth = byte2int(imagePrefix, 0, 4);
+      imageHeight = byte2int(imagePrefix, 4, 4);
       if ( imageWidth != devW || imageHeight != devH) {
           log(1, "Image rotated vs device");
           devW = imageWidth;
@@ -226,7 +229,7 @@ public class ADBDevice {
           imageY = x;
           imageX = y;
       }
-      for (int count = 0; count < readUntil; count++) {
+      for (int count = 0; count < imageY; count++) {
         stdout.read(row);
       }
 
@@ -247,9 +250,12 @@ public class ADBDevice {
     Mat matOrg = new Mat(imageHeight, imageWidth, CvType.CV_8UC4);
     matOrg.put(0, 0, image);
     Mat matImage = new Mat();
-    
-    Core.flip(Imgproc.t(), matImage, 1) if rotated;
-    Imgproc.cvtColor(matOrg, matImage, Imgproc.COLOR_RGBA2BGR, 3);
+    if (rotated) {
+        Core.flip(matOrg.t(), matImage, 1) ;
+        log(lvl, "image rotated, transposing and flipping Mat from %s to %s", matOrg.size(), matImage.size());        
+    }
+    log(lvl, "mat dims %s", matImage.dims());
+    Imgproc.cvtColor(matImage, matImage, Imgproc.COLOR_RGBA2BGR, 3);
     return matImage;
   }
 
