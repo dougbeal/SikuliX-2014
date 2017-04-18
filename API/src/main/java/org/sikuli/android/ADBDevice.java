@@ -208,8 +208,8 @@ public class ADBDevice {
       imageHeight = byte2int(imagePrefix, 4, 4);
       if ( imageWidth != devW || imageHeight != devH) {
           log(1, "Image rotated vs device");
-          devW = imageWidth;
-          devH = imageHeight;
+          //devW = imageWidth;
+          //devH = imageHeight;
           actX = y;
           actY = x;
           rotated = true;
@@ -233,11 +233,15 @@ public class ADBDevice {
         stdout.read(row);
       }
 
-      boolean shortRow = imageX + imageWidth < devW;
+      int width = devW;
+      if (rotated)
+          width = devH;
+          
+      boolean shortRow = imageX + imageWidth < width;
       for (int count = 0; count < imageHeight; count++) {
         if (shortRow) {
           stdout.read(row);
-          System.arraycopy(row, x * 4, image, count * actW * 4, actW * 4);
+          System.arraycopy(row, imageX * 4, image, count * imageWidth * 4, imageWidth * 4);
         } else {
           stdout.read(image, count * imageWidth * 4, imageWidth * 4);
         }
