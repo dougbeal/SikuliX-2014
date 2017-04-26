@@ -144,7 +144,7 @@ public class ADBScreen extends Region implements EventObserver, IScreen {
 
   @Override
   public ScreenImage capture() {
-    return capture(x, y, w, h);
+    return capture(x, y, -1, -1);
   }
 
   @Override

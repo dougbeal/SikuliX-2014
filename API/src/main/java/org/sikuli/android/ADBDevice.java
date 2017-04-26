@@ -139,11 +139,7 @@ public class ADBDevice {
   }
 
   public BufferedImage captureDeviceScreen() {
-    return captureDeviceScreen(0, 0, devW, devH);
-  }
-
-  public BufferedImage captureDeviceScreen(int y, int _h) {
-    return captureDeviceScreen(0, y, devW, _h);
+    return captureDeviceScreen(0, 0, -1, -1);
   }
 
   public BufferedImage captureDeviceScreen(int x, int y, int w, int h) {
@@ -157,22 +153,14 @@ public class ADBDevice {
     return bImage;
   }
 
-  public Mat captureDeviceScreenMat(int x, int y, int w, int h) {
+  public Mat captureDeviceScreenMat(int x, int y, int actW, int actH) {
     byte[] imagePrefix = new byte[12];
     byte[] image = new byte[0];
-    int imageWidth = 0;
-    int imageHeight = 0;
-    
-    boolean rotated = false;
-    int actW = w;
-    if (x + w > devW) {
-      actW = devW - x;
-    }
-    int actH = h;
-    if (y + h > devH) {
-      actH = devH - y;
-    }
     Debug timer = Debug.startTimer();
+    boolean isfullScreen =false;
+    if (x == 0 && y == 0 && actW < 0 && actH < 0) {
+      isfullScreen = true;
+    }
     try {
       String shellCmd = "settings get system user_rotation";
       log(lvl, shellCmd);        
@@ -201,27 +189,25 @@ public class ADBDevice {
         log(-1, "captureDeviceScreenMat: image type not RGBA");
         return null;
       }
-      int actX = x;
-      int actY = y;
-
-      imageWidth = byte2int(imagePrefix, 0, 4);
-      imageHeight = byte2int(imagePrefix, 4, 4);
-      if ( imageWidth != devW || imageHeight != devH) {
-          log(1, "Image rotated vs device");
-          //devW = imageWidth;
-          //devH = imageHeight;
-          actX = y;
-          actY = x;
-          rotated = true;
-      }
-      else if ( imageWidth != devW || imageHeight != devH) {
-          log(-1, "captureDeviceScreenMat: width or height [%d, %d] differ from device values [%d, %d]", imageWidth, imageHeight, devW, devH);
+      int currentW = byte2int(imagePrefix, 0, 4);
+      int currentH = byte2int(imagePrefix, 4, 4);
+      if (! ((currentW == devW && currentH == devH) || (currentH == devW && currentW == devH))) {
+        log(-1, "captureDeviceScreenMat: width or height differ from device values");
         return null;
       }
-
-      int lenRow = imageWidth * 4;      
-      image = new byte[imageWidth * imageHeight * 4];
-
+      if (isfullScreen) {
+        actW = currentW;
+        actH = currentH;
+      } else {
+        if (x + actW > currentW) {
+          actW = currentW - x;
+        }
+        if (y + actW > currentH) {
+          actH = currentH - y;
+        }
+      }
+      image = new byte[actW * actH * 4];
+      int lenRow = currentW * 4;
       byte[] row = new byte[lenRow];
       int imageY = y;
       int imageX = x;
@@ -232,13 +218,8 @@ public class ADBDevice {
       for (int count = 0; count < imageY; count++) {
         stdout.read(row);
       }
-
-      int width = devW;
-      if (rotated)
-          width = devH;
-          
-      boolean shortRow = imageX + imageWidth < width;
-      for (int count = 0; count < imageHeight; count++) {
+      boolean shortRow = x + actW < currentW;
+      for (int count = 0; count < actH; count++) {
         if (shortRow) {
           stdout.read(row);
           System.arraycopy(row, imageX * 4, image, count * imageWidth * 4, imageWidth * 4);
